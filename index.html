@@ -102,7 +102,7 @@ if(st.v==='albums'&&!st.sub){const g={},cv={};songs.forEach(x=>{const a=x.album|
 h=AL.map((a,i)=>`<div class="r" onclick="go('albums',{al:AL[${i}]==='Sem álbum'?'':AL[${i}]})"><div class="cv">${cv[a]?img(cv[a]):ic('disc',24,'#E4E4E7')}</div><div class="tx"><b>${E(a)}</b><i>${g[a]} músicas</i></div></div>`).join('')}
 else if(st.v==='artists'&&!st.sub){const g={};songs.forEach(x=>g[x.artist]=(g[x.artist]||0)+1);AR=Object.keys(g).sort().filter(a=>a.toLowerCase().includes(q));
 h=AR.map((a,i)=>`<div class="r" onclick="go('artists',{a:AR[${i}]})"><div class="cv" style="border-radius:24px;width:48px">${ic('user',24,'#E4E4E7')}</div><div class="tx"><b>${E(a)}</b><i>${g[a]} músicas</i></div></div>`).join('')}
-else if(np){h=pls.filter(p=>p.name.toLowerCase().includes(q)).map(p=>`<div class="r" onclick="go('playlists',{p:'${p.id}'})"><div class="cv">${p.cover?img(p.cover):ic('note',22,'#BDBDC5')}</div><div class="tx"><b>${E(p.name)}</b><i>${p.ids.length} músicas</i></div><button onclick="event.stopPropagation();PC='${p.id}';$('#fp').click()" aria-label="Trocar capa">${ic('cam',20,'#BDBDC5')}</button><button onclick="event.stopPropagation();delPl('${p.id}')" aria-label="Excluir playlist">${ic('trash',20,'#BDBDC5')}</button></div>`).join('')}
+else if(np){h=MX()+pls.filter(p=>p.name.toLowerCase().includes(q)).map(p=>`<div class="r" onclick="go('playlists',{p:'${p.id}'})"><div class="cv">${p.cover?img(p.cover):ic('note',22,'#BDBDC5')}</div><div class="tx"><b>${E(p.name)}</b><i>${p.ids.length} músicas</i></div><button onclick="event.stopPropagation();PC='${p.id}';$('#fp').click()" aria-label="Trocar capa">${ic('cam',20,'#BDBDC5')}</button><button onclick="event.stopPropagation();delPl('${p.id}')" aria-label="Excluir playlist">${ic('trash',20,'#BDBDC5')}</button></div>`).join('')}
 else h=L.map((s,i)=>`<div class="r" onclick="playL(${i})"><div class="cv" style="${s.id===pid?'box-shadow:0 0 0 2px #60A5FA':''}">${s.cover?img(s.cover):s.id===pid?ic('bars',22,'#60A5FA','none',3):''}</div><div class="tx"><b>${E(s.title)}</b><i>${E(s.artist)} · ${tm(s.dur)}</i></div><button onclick="event.stopPropagation();like('${s.id}')" aria-label="Curtir">${ic('heart',22,s.liked?'#60A5FA':'#BDBDC5',s.liked?'#60A5FA':'none')}</button><button onclick="event.stopPropagation();more('${s.id}')" aria-label="Mais opções">${ic('more')}</button></div>`).join('');
 if(!h)h=`<div class="em">${np?'Nenhuma playlist ainda.<br>Toque no + para criar.':st.v==='liked'?'Toque no coração de uma música para ela aparecer aqui.':q?'Nada encontrado.':'Sua biblioteca está vazia.<br>Toque no + para adicionar suas músicas (MP3, MP4...).'}</div>`;
 $('#list').innerHTML=h;
@@ -172,4 +172,73 @@ function meta(s){try{navigator.mediaSession.metadata=new MediaMetadata({title:s.
 try{const m=navigator.mediaSession;m.setActionHandler('play',()=>A.play());m.setActionHandler('pause',()=>A.pause());m.setActionHandler('previoustrack',()=>nx(-1));m.setActionHandler('nexttrack',()=>nx(1));m.setActionHandler('seekto',d=>{A.currentTime=d.seekTime})}catch(e){}
 (async()=>{try{db=await idb();songs=await tx('s','readonly',t=>t.objectStore('s').getAll())}catch(e){toast('Não foi possível abrir o armazenamento')}render()})();
 if('serviceWorker' in navigator)addEventListener('load',()=>navigator.serviceWorker.register('sw.js').then(r=>r.addEventListener('updatefound',()=>toast('Nova versão! Feche e abra o app.'))).catch(()=>{}));
+/* ===== v2: animações, configurações e extras ===== */
+document.head.appendChild(Object.assign(document.createElement('style'),{textContent:`
+.lr{display:block;transition:color .4s,opacity .4s,transform .4s;transform-origin:left center}
+#ly,#lyf{scroll-behavior:smooth}
+#lyf{font-size:var(--lfs,24px)!important}
+@keyframes fi{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes up{from{transform:translateY(32px);opacity:0}to{transform:none;opacity:1}}
+@keyframes pop{0%{transform:scale(.8)}60%{transform:scale(1.25)}100%{transform:scale(1.1)}}
+.fi{animation:fi .35s ease both}
+#sh.o #sc{animation:up .25s ease both}
+nav button svg{transition:transform .2s}
+.tabanim button.on svg{animation:pop .35s ease both}
+#mini:not([hidden]){animation:fi .3s ease both}
+.r:active{transform:scale(.98);transition:transform .1s}
+.novz #vz{display:none}
+.noanim *{animation:none!important;transition:none!important;scroll-behavior:auto!important}
+`}));
+const CF=Object.assign({aw:1,an:1,vz:1,lf:24},load('cf',{}));
+const scf=()=>{save('cf',CF);ap()};
+function ap(){const r=document.documentElement;r.classList.toggle('noanim',!CF.an);r.classList.toggle('novz',!CF.vz);r.style.setProperty('--lfs',CF.lf+'px')}ap();
+{const t0=A.ontimeupdate;A.ontimeupdate=()=>{t0();document.querySelectorAll('.lr').forEach(x=>{const on=x.style.color==='var(--tx)';x.style.fontWeight='';x.style.opacity=on?1:.4;x.style.transform=on?'scale(1.05)':'none'})}}
+const rf=el=>{if(el){el.classList.remove('fi');void el.offsetWidth;el.classList.add('fi')}};
+{const g0=go;go=function(v,s){g0(v,s);rf($('#list'));const n=$('#nav');n.classList.add('tabanim');setTimeout(()=>n.classList.remove('tabanim'),400)}}
+let WL=null;
+async function wk(on){try{if(on&&!WL&&navigator.wakeLock){WL=await navigator.wakeLock.request('screen');WL.addEventListener('release',()=>{WL=null})}else if(!on&&WL){await WL.release();WL=null}}catch(e){}}
+function aw(){const l=$('#lf').classList.contains('o'),p=$('#pl').classList.contains('o');wk(CF.aw===2?(l||p):CF.aw===1?l:false)}
+new MutationObserver(aw).observe($('#pl'),{attributes:true,attributeFilter:['class']});
+new MutationObserver(()=>{aw();if($('#lf').classList.contains('o'))rf($('#lyf'))}).observe($('#lf'),{attributes:true,attributeFilter:['class']});
+document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')aw()});
+{const v0=vz;vz=function(){if(CF.vz)v0();else requestAnimationFrame(vz)}}
+$('#pl').addEventListener('dblclick',e=>{const b=e.target.closest&&e.target.closest('.big');if(b){const r=b.getBoundingClientRect();A.currentTime=Math.max(0,A.currentTime+(e.clientX<r.left+r.width/2?-10:10));toast(e.clientX<r.left+r.width/2?'-10s':'+10s')}});
+async function all(){const l=songs.filter(s=>!s.cover||!s.lyr);if(!l.length)return toast('Tudo completo');let n=0;for(const s of l){toast('Completando '+(++n)+' de '+l.length+'...');await info(s)}render();toast('Pronto!')}
+function mix(){if(!songs.length)return toast('Importe músicas primeiro');const w=s=>1+(s.liked?3:0)+Math.min(s.plays||0,10),pool=[];songs.forEach(s=>{for(let i=0;i<w(s);i++)pool.push(s)});const ids=[];while(ids.length<Math.min(25,songs.length)){const s=pool[Math.floor(Math.random()*pool.length)];if(!ids.includes(s.id))ids.push(s.id)}queue=ids;SF=false;start(0);toast('Mix do dia: '+ids.length+' músicas')}
+function retro(){const t=songs.filter(s=>s.plays).sort((a,b)=>b.plays-a.plays).slice(0,5),a={};let tot=0,sec=0;songs.forEach(s=>{const p=s.plays||0;tot+=p;sec+=p*(s.dur||0);if(p)a[s.artist]=(a[s.artist]||0)+p});const ta=Object.entries(a).sort((x,y)=>y[1]-x[1])[0];sheet('Retrospectiva',[],`<div style="padding:4px 8px 12px;line-height:1.7"><div>▶ <b>${tot}</b> reproduções · <b>${Math.round(sec/60)}</b> min ouvidos</div>${ta?`<div>Artista mais ouvido: <b>${E(ta[0])}</b></div>`:''}${t.length?'<div style="margin-top:8px;color:var(--t2)">Mais tocadas:</div>'+t.map((s,i)=>`<div>${i+1}. ${E(s.title)} <span style="color:var(--t2)">(${s.plays}x)</span></div>`).join(''):'<div style="color:var(--t2)">Toque algumas músicas para ver sua retrospectiva.</div>'}</div>`)}
+async function stor(){try{const e=await navigator.storage.estimate();toast('Usando '+(e.usage/1048576).toFixed(0)+' MB de '+(e.quota/1048576).toFixed(0)+' MB')}catch(x){toast('Indisponível')}}
+const MX=()=>`<div class="r" onclick="mix()"><div class="cv" style="background:var(--ac)">${ic('shuf',24,'#0B0B0B')}</div><div class="tx"><b>Mix do dia</b><i>Mistura pro seu gosto</i></div></div><div class="r" onclick="retro()"><div class="cv">${ic('bars',22,'#E4E4E7','none',3)}</div><div class="tx"><b>Retrospectiva</b><i>Suas mais ouvidas</i></div></div>`;
+cfg=function(){const lt=load('tema',0)===1,on=v=>v?'ligado':'desligado';sheet('Configurações',[[lt?'Tema escuro':'Tema claro',()=>{save('tema',lt?0:1);tema();cfg()}],['Cor do app',cor],['Transição suave: '+(XF?XF+'s':'desligada'),xfd],['Velocidade: '+RATE+'x',vel],['Tela ligada: '+['nunca','na letra','no player'][CF.aw],()=>{CF.aw=(CF.aw+1)%3;scf();aw();cfg()}],['Animações: '+on(CF.an),()=>{CF.an=CF.an?0:1;scf();cfg()}],['Visualizador: '+on(CF.vz),()=>{CF.vz=CF.vz?0:1;scf();cfg()}],['Tamanho da letra: '+CF.lf+'px',()=>{CF.lf=({20:24,24:30,30:36,36:20})[CF.lf]||24;scf();cfg()}],['Completar capa e letra de todas',all],['Retrospectiva',retro],['Exportar backup',bak],['Restaurar backup',()=>$('#fb').click()],['Achar músicas duplicadas',dup],['Armazenamento usado',stor]])};
+/* ===== v3: editar nome da música e do artista ===== */
+P.edit='M12 20h9M16.5 3.5a2.1 2.1 0 013 3L7 19l-4 1 1-4z';
+function ed(id){const s=songs.find(x=>x.id===id);if(!s)return;const f=(i,l,v)=>`<label style="display:block;font-size:12px;color:var(--t2)">${l}</label><input id="${i}" value="${E(v)}" style="width:100%;height:44px;border-radius:10px;border:0;background:var(--cd);padding:0 12px;margin:4px 0 12px;font-size:16px">`,fin=()=>{if(queue[qi]===id){meta(s);lp='';ui()}render()},it=[['Salvar',()=>{if(!s.o)s.o={title:s.title,artist:s.artist,album:s.album||''};s.title=$('#e1').value.trim()||s.title;s.artist=$('#e2').value.trim()||s.artist;s.album=$('#e3').value.trim();putS(s);fin();toast('Salvo!')}]];if(s.o)it.push(['Restaurar nomes originais',()=>{s.title=s.o.title;s.artist=s.o.artist;s.album=s.o.album;delete s.o;putS(s);fin();toast('Nomes originais restaurados')}]);sheet('Editar música',it,`<div style="padding:4px 8px 0">${f('e1','Nome da música',s.title)}${f('e2','Nome do artista',s.artist)}${f('e3','Álbum (opcional)',s.album||'')}</div>`)}
+{const m0=more;more=function(id){m0(id);const bs=[...document.querySelectorAll('#sc .sb')],i=bs.findIndex(x=>x.textContent==='Editar informações');if(i>=0){SH[i]=()=>ed(id);bs[i].textContent='Editar nome, artista e álbum'}}}
+{const p0=pdraw;pdraw=function(s){p0(s);const i=document.querySelector('#pl .in .tx i');if(i){const b=document.createElement('button');b.setAttribute('aria-label','Editar nome e artista');b.style.cssText='min-width:32px;min-height:32px;vertical-align:middle;margin-left:4px';b.innerHTML=ic('edit',16,'#BDBDC5');b.onclick=()=>ed(s.id);i.appendChild(b)}}}
+function ra(){const as=[...new Set(songs.map(s=>s.artist))].sort();if(!as.length)return toast('Nenhuma música ainda');sheet('Renomear qual artista?',as.map(a=>[E(a),()=>{const n=(prompt('Novo nome para "'+a+'"',a)||'').trim();if(!n||n===a)return;songs.forEach(s=>{if(s.artist===a){s.artist=n;putS(s)}});render();lp='';ui();toast('Artista renomeado')}]))}
+{const c0=cfg;cfg=function(){c0();const add=(l,fn)=>{SH.push(fn);const b=document.createElement('button');b.className='sb';b.textContent=l;b.setAttribute('onclick','cs();SH['+(SH.length-1)+']()');$('#sc').insertBefore(b,$('#sc').children[1])};add('Renomear artista (em todas as músicas)',ra);add('Editar a música que está tocando',()=>{const s=songs.find(x=>x.id===queue[qi]);s?ed(s.id):toast('Nenhuma música tocando')})}}
+/* ===== v4: equalizador 10 bandas, voz e volume até 500% ===== */
+let VOL=load('vol',1),VM=load('vm',0),EQ10=load('eq10',[0,0,0,0,0,0,0,0,0,0]),BG,VX={};
+const EB=['31','62','125','250','500','1k','2k','4k','8k','16k'];
+const PR={Normal:[0,0,0,0,0,0,0,0,0,0],Pop:[1,2,4,5,3,0,-1,-1,1,2],Rock:[5,4,3,1,-1,-1,2,3,4,5],Jazz:[4,3,1,2,-2,-2,0,1,3,4],'Clássico':[0,0,0,0,0,0,-3,-3,-3,-4],'Hip-hop':[6,5,3,3,-1,-1,1,-1,2,3],Dance:[6,5,2,0,0,-2,-3,-3,0,0],Metal:[5,4,0,-1,-3,0,2,5,6,5],'Eletrônica':[5,4,1,0,-2,2,1,1,4,5],'Graves+':[8,7,5,3,1,0,0,0,0,0],'Agudos+':[0,0,0,0,0,1,3,5,7,8],'Realçar voz':[-3,-2,-1,1,3,5,5,3,0,-1]};
+mkeq=function(){if(ctx)return;try{const c=ctx=new(window.AudioContext||window.webkitAudioContext)(),hub=c.createGain(),src=c.createMediaElementSource(A),fr=[31,62,125,250,500,1000,2000,4000,8000,16000],F=(t,f)=>{const b=c.createBiquadFilter();b.type=t;b.frequency.value=f;return b};
+VX.src=src;VX.hub=hub;
+fl=fr.map((f,i)=>{const b=c.createBiquadFilter();b.type=i===0?'lowshelf':i===9?'highshelf':'peaking';b.frequency.value=f;b.Q.value=1.1;b.gain.value=EQ10[i];return b});
+hub.connect(fl[0]);for(let i=0;i<9;i++)fl[i].connect(fl[i+1]);
+BG=c.createGain();BG.gain.value=VOL;
+const lim=VX.lim=c.createDynamicsCompressor();lim.threshold.value=VOL>1?-8:0;lim.knee.value=0;lim.ratio.value=20;lim.attack.value=.003;lim.release.value=.12;
+AN=c.createAnalyser();AN.fftSize=64;
+fl[9].connect(BG);BG.connect(lim);lim.connect(AN);AN.connect(c.destination);
+const s1=c.createChannelSplitter(2),ng=c.createGain(),sa=c.createGain(),h1=F('highpass',150),m1=c.createChannelMerger(2),lp=F('lowpass',150);ng.gain.value=-1;
+s1.connect(sa,0);s1.connect(ng,1);ng.connect(sa);sa.connect(h1);h1.connect(m1,0,0);h1.connect(m1,0,1);m1.connect(hub);lp.connect(hub);
+VX.rm=[s1,lp];
+const s2=c.createChannelSplitter(2),sb=c.createGain(),h2=F('highpass',250),l2=F('lowpass',4000),m2=c.createChannelMerger(2);
+s2.connect(sb,0);s2.connect(sb,1);sb.gain.value=.8;sb.connect(h2);h2.connect(l2);l2.connect(m2,0,0);l2.connect(m2,0,1);m2.connect(hub);
+VX.vo=[s2];
+vm(VM)}catch(e){ctx=null;fl=[]}};
+function vm(m){const x=VX;try{x.src.disconnect()}catch(e){}(m===1?x.rm:m===2?x.vo:[x.hub]).forEach(n=>x.src.connect(n))}
+function se(i,v){EQ10[i]=+v;if(fl[i])fl[i].gain.value=+v;save('eq10',EQ10)}
+function sv(v){VOL=v/100;if(BG)BG.gain.value=VOL;if(VX.lim)VX.lim.threshold.value=VOL>1?-8:0;save('vol',VOL);$('#vl').textContent=v+'%'}
+function sm(m){VM=m;save('vm',m);if(ctx)vm(m);eqs()}
+function sp(n){EQ10=PR[n].slice();EQ10.forEach((v,i)=>{if(fl[i])fl[i].gain.value=v});save('eq10',EQ10);const r=[...document.querySelectorAll('#sc input[type=range]')];EQ10.forEach((v,i)=>{if(r[i+1])r[i+1].value=v});toast('Predefinição: '+n)}
+eqs=function(){const sl=EB.map((n,i)=>`<div style="width:30px;height:130px;position:relative"><input type="range" min="-12" max="12" step="1" value="${EQ10[i]}" oninput="se(${i},this.value)" aria-label="${n} Hz" style="position:absolute;left:-42px;top:51px;width:114px;transform:rotate(-90deg);margin:0"><div style="position:absolute;bottom:-20px;left:0;width:30px;text-align:center;font-size:10px;color:var(--t2)">${n}</div></div>`).join(''),ch=(on,fn,n)=>`<button class="chip" style="${on?'background:var(--ac);color:var(--bg)':''}" onclick="${fn}">${n}</button>`;sheet('Equalizador',[],`<div style="padding:0 4px 8px"><div style="font-size:12px;color:var(--t2);padding:4px">Volume: <b id="vl">${Math.round(VOL*100)}%</b></div><input type="range" min="0" max="500" step="5" value="${Math.round(VOL*100)}" oninput="sv(this.value)" aria-label="Volume"><div style="font-size:11px;color:var(--t2);padding:0 4px 12px">Acima de 200% pode distorcer e prejudicar o alto-falante e a audição.</div><div style="font-size:12px;color:var(--t2);padding:4px">Voz</div><div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 4px 12px">${['Normal','Sem voz','Só voz'].map((n,i)=>ch(VM===i,'sm('+i+')',n)).join('')}</div><div style="font-size:12px;color:var(--t2);padding:4px">Predefinições</div><div style="display:flex;gap:8px;flex-wrap:wrap;padding:0 4px 12px">${Object.keys(PR).map(n=>ch(0,"sp('"+n+"')",n)).join('')}</div><div style="display:flex;justify-content:space-between;padding:8px 4px 32px">${sl}</div></div>`)};
 </script></body></html>
